@@ -42,6 +42,11 @@ class ApiAccess():
                 if not self.__Cmd__TransactionGsad(cmd):
                     self.ErrorLog(__LINE__())
                     return False
+                
+            case 'ExchangeRate.Get':
+                if not self.__Cmd__ExchangeRateGsad(cmd):
+                    self.ErrorLog(__LINE__())
+                    return False
 
             case _:
                 self.resp['Errors'].append(ERROR_CMD_NOT_SUPPORT)
@@ -209,6 +214,38 @@ class ApiAccess():
             case 'User.Del':
                 if not oUser.UserGsad('Del'):
                     self.ErrorLog(__LINE__())
+
+            case _:
+                self.resp['Errors'].append(ERROR_CMD_NOT_SUPPORT)
+                return False
+            
+        # Set Response
+        return True
+
+    def __Cmd__ExchangeRateGsad(self, cmd):
+        from exchange_rates.exchange_rates import ExchangeRate
+        oExchangeRate = ExchangeRate()
+        match cmd:
+            case 'ExchangeRate.Get':
+                # Init vars.
+                if not self.IpVars.get('FromCurrency') or not self.IpVars.get('ToCurrency'):
+                    self.ErrorLog(__LINE__(), "IpVars missing or invalid.")
+                    return False
+                
+                aVarsIn, aVarsOut = {}, {}
+                aVarsIn['FromCurrency'] = self.IpVars.get('FromCurrency')
+                aVarsIn['ToCurrency'] = self.IpVars.get('ToCurrency')
+
+                # Get Rate
+                if not oExchangeRate.ExchangeRateGsad('Get', aVarsIn, aVarsOut):
+                    self.ErrorLog(__LINE__())
+                    return False
+
+                if not aVarsOut.get('Rate'):
+                    self.ErrorLog(__LINE__())
+                    return False
+                
+                self.resp['Rate'] = aVarsOut['Rate']
 
             case _:
                 self.resp['Errors'].append(ERROR_CMD_NOT_SUPPORT)
